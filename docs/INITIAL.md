@@ -6,3 +6,24 @@
 
   ## Instalar o Biome
     - pnpm i -D @biomejs/biome
+
+  ## Instalar o React-router-dom:
+    - pnpm i react-router-dom
+
+  ## Instalar o Shadcn ui
+    - pnpm dlx shadcn@latest init
+    - No tsconfig -> colcoar antes de instalar o shadcn:
+      {
+        "compilerOptions": {
+          "baseUrl": ".",
+          "paths": {
+            "@/*": ["./src/*"]
+          }
+        } 
+      }
+    - No vite.config:
+      resolve: {
+        alias: {
+          "@": path.resolve(__dirname, "./src"),
+        },
+      },
