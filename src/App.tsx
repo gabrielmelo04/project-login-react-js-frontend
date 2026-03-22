@@ -1,6 +1,11 @@
-
-import { AppRoutes } from "./routes";
+import { Toaster } from './components/ui/sonner'
+import { AppRoutes } from './routes'
 
 export default function App() {
-  return <AppRoutes />;
+  return (
+    <>
+      <AppRoutes />
+      <Toaster richColors position="top-right" />
+    </>
+  )
 }
