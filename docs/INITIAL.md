@@ -27,3 +27,13 @@
           "@": path.resolve(__dirname, "./src"),
         },
       },
+
+   ## Adicionar essas 2 libs de icones
+   - pnpm i react-icons
+   - pnpm add lucide-react@next
+
+  ## Instalar o React Hook Form
+  - pnpm install react-hook-form
+
+  ## Instalar validações:
+  - pnpm i zod @hookform/resolvers
