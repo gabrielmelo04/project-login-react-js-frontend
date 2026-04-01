@@ -9,6 +9,9 @@ import { Field, FieldLabel } from '../../components/ui/field'
 import { Input } from '../../components/ui/input'
 import { PasswordInput } from '../../components/ui/password-input'
 import { Separator } from '../../components/ui/separator'
+import { Spinner } from '../../components/ui/spinner'
+// import axios from 'axios'
+import { useAuth } from '../../contexts/AuthContext'
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'E-mail inválido' }),
@@ -24,14 +27,36 @@ export function LoginPage() {
     resolver: zodResolver(loginSchema),
   })
 
-  const { handleSubmit } = loginForm
+  const { handleSubmit, setFocus } = loginForm
 
   const navegate = useNavigate()
+  const { login, loading } = useAuth()
 
-  function handleLogin(data: LoginFormData) {
-    console.log('Dados do formulário:', data)
-    // Aqui você pode adicionar a lógica para enviar os dados de login para o servidor
-    toast.success('Login realizado com sucesso!')
+  async function handleLogin(data: LoginFormData) {
+    try {
+      await login({
+        email: data.email,
+        password: data.password,
+      })
+      toast.success('Login realizado com sucesso!')
+      navegate('/')
+    } catch (error: any) {
+      toast.error(error?.message || 'Erro ao fazer login')
+    }
+  }
+
+  function handleGoogleAuth() {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+    const redirectUri = 'http://localhost:3333/auth/google/callback'
+    const scope = 'openid email profile'
+    const responseType = 'code'
+    const url =
+      `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${clientId}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&response_type=${responseType}` +
+      `&scope=${encodeURIComponent(scope)}`
+    window.location.href = url
   }
 
   return (
@@ -41,7 +66,11 @@ export function LoginPage() {
       </h1>
 
       <div className="w-full flex justify-center mt-5">
-        <Button className="cursor-pointer p-5 text-lg">
+        <Button
+          className="cursor-pointer p-5 text-lg bg-primary text-primary-foreground hover:bg-primary/80"
+          onClick={handleGoogleAuth}
+          disabled={loading}
+        >
           <FcGoogle className="size-6" />
           Google
         </Button>
@@ -50,8 +79,16 @@ export function LoginPage() {
       <FormProvider {...loginForm}>
         <form
           className="w-full py-4 flex flex-col gap-4"
-          onSubmit={handleSubmit(handleLogin)}
+          onSubmit={handleSubmit(handleLogin, (errors) => {
+            if (errors.email) setFocus('email')
+            else if (errors.password) setFocus('password')
+          })}
         >
+          {loading && (
+            <div className="flex items-center justify-center gap-2 text-slate-200 text-center py-2">
+              <Spinner className="w-5 h-5" /> Entrando...
+            </div>
+          )}
           <Field className="relative">
             <FieldLabel>E-mail</FieldLabel>
             <Input type="email" placeholder="Digite seu e-mail" name="email" />
@@ -75,8 +112,16 @@ export function LoginPage() {
           <Button
             type="submit"
             className="w-full cursor-pointer bg-emerald-500 hover:bg-emerald-600 text-slate-50"
+            disabled={loading}
           >
-            Entrar
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Spinner className="w-4 h-4" />
+                Entrando...
+              </span>
+            ) : (
+              'Entrar'
+            )}
           </Button>
         </form>
       </FormProvider>
