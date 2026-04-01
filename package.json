@@ -15,7 +15,9 @@
     "@fontsource/roboto": "^5.2.10",
     "@hookform/error-message": "^2.0.1",
     "@hookform/resolvers": "^5.2.2",
+    "@react-oauth/google": "^0.13.4",
     "@tailwindcss/vite": "^4.2.2",
+    "axios": "^1.14.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide": "1.0.0-rc.1",
@@ -37,6 +39,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.8",
+    "@playwright/test": "^1.59.1",
+    "@types/axios": "^0.14.4",
     "@types/node": "^24.12.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
