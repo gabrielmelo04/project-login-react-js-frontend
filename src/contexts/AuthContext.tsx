@@ -42,13 +42,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const res = await api.get('/users/me')
       setUser(res.data)
-    } catch (error) {
+    } catch (error: any) {
       setUser(null)
+      // Só redireciona para login se NÃO já estiver na tela de login e for 401
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname
+        if (currentPath !== '/login' && error?.response?.status === 401) {
+          window.location.href = '/login'
+        }
+      }
     }
     setLoading(false)
   }
 
   useEffect(() => {
+    // Se já está na página de login, não tentar buscar o usuário para evitar loop
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname
+      if (currentPath === '/login') {
+        setLoading(false)
+        setUser(null)
+        return
+      }
+    }
     fetchMe()
   }, [])
 
