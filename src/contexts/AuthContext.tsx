@@ -22,11 +22,12 @@ interface AuthContextType {
   loading: boolean
   login: (credentials: { email: string; password: string }) => Promise<void>
   logout: () => Promise<void>
+  logoutAll: () => Promise<void>
   register: (data: {
     name: string
     email: string
     password: string
-  }) => Promise<void>
+  }) => Promise<string | void>
   refetchUser: () => Promise<void> // Útil para garantir dados frescos do /me
 }
 
@@ -73,6 +74,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const logoutAll = async () => {
+    setLoading(true)
+    try {
+      console.log('[logoutAll] Calling /auth/logout-all')
+      await api.post('/auth/logout-all')
+      setUser(null)
+      if (typeof window !== 'undefined') {
+        // Lazy import to avoid cyclic deps, assume toast from sonner
+        import('sonner').then(({ toast }) => {
+          toast.success('Todas as sessões foram encerradas com sucesso!')
+        })
+      }
+      // Redireciona para login se react-router disponível
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
+    } catch (err: any) {
+      console.error('[logoutAll] API error:', err)
+      setUser(null)
+      if (typeof window !== 'undefined') {
+        import('sonner').then(({ toast }) => {
+          toast.error(
+            'Erro ao encerrar todas as sessões: ' +
+              (err?.response?.data?.message ||
+                err.message ||
+                'Erro inesperado'),
+          )
+        })
+      }
+      window.location.href = '/login'
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const register = async (data: {
     name: string
     email: string
@@ -101,7 +137,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, register, refetchUser: fetchMe }}
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        logoutAll,
+        register,
+        refetchUser: fetchMe,
+      }}
     >
       {children}
     </AuthContext.Provider>

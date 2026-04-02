@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 export function DashboardPage() {
   const { user } = useAuth()
   return (
-    <div>
+    <div className="w-full py-10 px-16 flex flex-col items-center">
       <h1 className="text-2xl font-bold">Dashboard</h1>
       <p>Bem-vindo {user?.name} ao dashboard! Esta é uma área privada.</p>
       <p>Seu e-mail: {user?.email}</p>
