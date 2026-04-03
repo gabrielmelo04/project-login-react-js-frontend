@@ -6,6 +6,7 @@ import {
   useState,
 } from 'react'
 import api from '../lib/api.ts'
+import { setHadUser } from '../lib/session'
 
 // Tipos dos dados
 interface User {
@@ -35,15 +36,28 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
+
+  // Sincroniza estado global para que interceptors tenham acesso
+  useEffect(() => {
+    setHadUser(user !== null)
+  }, [user])
   const [loading, setLoading] = useState(true)
 
   const fetchMe = async () => {
     setLoading(true)
+    // Guarda o estado anterior do usuário para saber se estava autenticado
+    const hadUser = !!user
     try {
       const res = await api.get('/users/me')
       setUser(res.data)
     } catch (error: any) {
       setUser(null)
+      // Só mostra toast se usuário estava autenticado antes
+      if (hadUser && typeof window !== 'undefined') {
+        import('sonner').then(({ toast }) => {
+          toast.error('Sua sessão expirou. Faça login novamente.')
+        })
+      }
       // Só redireciona para login se NÃO já estiver na tela de login e for 401
       if (typeof window !== 'undefined') {
         const currentPath = window.location.pathname
@@ -56,15 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   useEffect(() => {
-    // Se já está na página de login, não tentar buscar o usuário para evitar loop
-    if (typeof window !== 'undefined') {
-      const currentPath = window.location.pathname
-      if (currentPath === '/login') {
-        setLoading(false)
-        setUser(null)
-        return
-      }
-    }
+    // Sempre checa sessão ao inicializar o app, em qualquer rota!
     fetchMe()
   }, [])
 
@@ -93,7 +99,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logoutAll = async () => {
     setLoading(true)
     try {
-      console.log('[logoutAll] Calling /auth/logout-all')
       await api.post('/auth/logout-all')
       setUser(null)
       if (typeof window !== 'undefined') {

@@ -1,4 +1,6 @@
 import axios, { type AxiosError, type AxiosResponse } from 'axios'
+import { doNavigate } from './navigate'
+import { getHadUser } from './session'
 
 const api = axios.create({
   baseURL: 'http://localhost:3333',
@@ -64,22 +66,25 @@ api.interceptors.response.use(
         const backendMsg = refreshErr?.response?.data?.message
         // Mensagens personalizadas conforme backend
         if (status === 401) {
-          // Toast explicando o que houve (mensagem do backend, ou genérica)
+          // Só mostrar toast de refresh token se usuário estava autenticado
+          if (backendMsg === 'Refresh token não encontrado' && !getHadUser()) {
+            // Usuário nunca autenticado: silent redirect
+            setTimeout(() => {
+              doNavigate('/login')
+            }, 100)
+            return Promise.reject(error)
+          }
           import('sonner').then(({ toast }) => {
             toast.error(
               backendMsg || 'Sua sessão expirou. Faça login novamente.',
             )
+            setTimeout(() => {
+              doNavigate('/login')
+            }, 600)
           })
-          window.location.href = '/login'
-        } else if (status === 500) {
-          import('sonner').then(({ toast }) => {
-            toast.error(
-              backendMsg ||
-                'Erro ao renovar autenticação. Tente novamente ou faça login.',
-            )
-          })
-          // Não faz redirect imediato; usuário pode tentar novamente
         }
+        // Log diagnóstico para depuração
+
         return Promise.reject(error)
       } finally {
         isRefreshing = false
